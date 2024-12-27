@@ -1,8 +1,11 @@
 import { clientDb } from "../config/db.js";
-import { Double, ObjectId } from "mongodb";
+import { ObjectId } from "mongodb";
+import {productModel} from "../models/product.js";
+import { ZodError } from "zod";
+import { envVariables } from "../config/envVariables.js";
 
-const port = process.env.PORT || 5000
-const urlBackend = `http://localhost:${port}`
+const {PORT} = envVariables
+const urlBackend = `http://localhost:${PORT}`
 
 const getProducts = async (res) => {
     try{
@@ -18,10 +21,10 @@ const getProduct = async (id,res) => {
     try{
         const product = await clientDb.collection("products").findOne({ _id: ObjectId.createFromHexString(id)});
         if(!product){
-            res.status(404).send(`Product with the id ${id} not found`);
+            res.status(404).json({message:`Product with the id ${id} not found`});
         }
 
-        return res.status(200).send(product);
+        return res.status(200).json(product);
     }catch(err){
         console.log('Error', err);
         return res.status(500).json({ message: 'Internal server error' });
@@ -33,17 +36,25 @@ const newProduct = async (product,res) => {
     try {
         const formatedProduct = {
             ...product,
-            price: new Double(product.price),
+            price: parseFloat(product.price),
             pieces: parseInt(product.pieces),
             picture:`${urlBackend}/${product.picture}`
         }
-
-        const result = await clientDb.collection("products").insertOne(formatedProduct);
-        return res.status(201).send({
+        const validProduct = productModel.parse(formatedProduct);
+        const result = await clientDb.collection("products").insertOne(validProduct);
+        return res.status(201).json({
             data: result,
             message: "Product created successfully"
         });
     } catch (err) {
+        if (err instanceof ZodError) {
+            // Extraer y estructurar los errores
+            const errores = err.errors.map(err => ({
+                campo: err.path.join('.'),
+                mensaje: err.message,
+            }));
+            return res.status(400).json({ errores });
+        }
         console.error(err);
         return res.status(500).json({ message: 'Internal server error' });
     }
@@ -53,13 +64,13 @@ const updateProduct = async (id,parameters,res) => {
     try{
         const product = await clientDb.collection("products").findOne({ _id: ObjectId.createFromHexString(id)});
         if(!product){
-            res.status(404).send(`Product with the id ${id} not found`);
+            res.status(404).json({message:`Product with the id ${id} not found`});
         }
 
         
         const result = await clientDb.collection("products").updateOne({ _id: ObjectId.createFromHexString(id) }, { $set: parameters });
 
-        res.status(200).send({
+        res.status(200).json({
             data: result,
             message: "Product updated successfully"
         });
@@ -72,16 +83,16 @@ const updateProduct = async (id,parameters,res) => {
 
 const updateImage = async (id,res,picture) => {
     if(!picture){
-        res.status(400).send("Missing required fields (picture)")
+        res.status(400).json({message:"Missing required fields (picture)"})
     }
     const product = await clientDb.collection("products").findOne({ _id: ObjectId.createFromHexString(id)});
     if(!product){
-        res.status(404).send(`Product with the id ${id} not found`);
+        res.status(404).json({message:`Product with the id ${id} not found`});
     }
 
     const result = await clientDb.collection("products").updateOne({ _id: ObjectId.createFromHexString(id) }, { $set: { picture:`${urlBackend}/${picture}` }});
 
-    res.status(200).send({
+    res.status(200).json({
         data: result,
         message: "Picture updated successfully"
     });
@@ -90,7 +101,7 @@ const updateImage = async (id,res,picture) => {
 const deleteProduct = async (id,res) => {
     const product = await clientDb.collection("products").deleteOne({ _id: ObjectId.createFromHexString(id) });
     if(!product){
-        res.status(404).send(`Product with the id ${id} not found`);
+        res.status(404).json({message:`Product with the id ${id} not found`});
     }
     res.status(200).json({
         data: product,

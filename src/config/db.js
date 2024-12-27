@@ -1,6 +1,8 @@
 import { MongoClient } from "mongodb";
-const PORT_DB = process.env.PORT_DB || 27017
-const dbName = process.env.DB_NAME || "sushi-db"
+import { envVariables } from "../config/envVariables.js";
+
+
+const {PORT_DB,DB_NAME} = envVariables
 
 
 
@@ -16,7 +18,7 @@ client.connect((err) => {
 })
 
 
-const clientDb = client.db(dbName);
+const clientDb = client.db(DB_NAME);
 
 export {
     clientDb
