@@ -13,7 +13,7 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
 
 app.use(json());
 app.use(express.static(path.join(__dirname, "public/images")));
-app.use("/products",routerProducts)
+app.use(routerProducts)
 
 app.get("/",(req, res) => {
     res.send("Hello this is the server for sushi chat bot")
@@ -22,5 +22,5 @@ app.get("/",(req, res) => {
 
 
 app.listen(port,() => {
-    console.log(`Server running on port localhost:${port}`)
+    console.log(`Server running on port http://localhost:${port}`)
 })
