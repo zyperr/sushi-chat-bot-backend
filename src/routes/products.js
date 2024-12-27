@@ -1,8 +1,8 @@
-import express from 'express';
-import {newProduct,getProducts,getProduct} from "../services/service.js";
+import { Router } from "express";
+import {newProduct,getProducts,getProduct,updateProduct, deleteProduct,updateImage} from "../services/service.js";
 import {upload} from "../config/staticFiles.js";
 
-const router = express.Router();
+const router = Router();
 
 router.get("/products",async(req,res) => {
     try{
@@ -38,6 +38,47 @@ router.post("/products",upload.single("picture"),async (req,res) => {
         }
         const product = {name,price,picture,pieces};
         return newProduct(product,res);
+    }catch(err){
+        console.log('Error', err);
+        return res.status(500).json({ message: 'Internal server error' });
+    }
+})
+
+
+router.put("/products/:id",async (req,res) => {
+    try{
+        const id = req.params?.id
+        const productData = {...req.body};
+        
+        return await updateProduct(id,productData,res);
+    }catch(err){
+        console.log('Error', err);
+        return res.status(500).json({ message: 'Internal server error' });
+    }
+
+})
+
+
+router.patch("/products/:id",upload.single("picture"),async (req,res) => {
+
+    try{
+        const id = req.params?.id;
+        const picture = req.file?.filename;
+
+        return await updateImage(id,res,picture);
+
+    }catch(err){
+        console.log(err)
+        res.status(500).json({message:"Internal server error"})
+    }
+})
+
+
+router.delete("/products/:id",async (req,res) => {
+    try{
+        const id = req.params?.id
+        
+        return await deleteProduct(id,res);
     }catch(err){
         console.log('Error', err);
         return res.status(500).json({ message: 'Internal server error' });
