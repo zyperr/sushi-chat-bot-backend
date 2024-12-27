@@ -48,8 +48,61 @@ const newProduct = async (product,res) => {
         return res.status(500).json({ message: 'Internal server error' });
     }
 }
+
+const updateProduct = async (id,parameters,res) => {
+    try{
+        const product = await clientDb.collection("products").findOne({ _id: ObjectId.createFromHexString(id)});
+        if(!product){
+            res.status(404).send(`Product with the id ${id} not found`);
+        }
+
+        
+        const result = await clientDb.collection("products").updateOne({ _id: ObjectId.createFromHexString(id) }, { $set: parameters });
+
+        res.status(200).send({
+            data: result,
+            message: "Product updated successfully"
+        });
+        
+    }catch(err){
+        console.log('Error', err);
+        return res.status(500).json({ message: 'Internal server error' });
+    }
+}
+
+const updateImage = async (id,res,picture) => {
+    if(!picture){
+        res.status(400).send("Missing required fields (picture)")
+    }
+    const product = await clientDb.collection("products").findOne({ _id: ObjectId.createFromHexString(id)});
+    if(!product){
+        res.status(404).send(`Product with the id ${id} not found`);
+    }
+
+    const result = await clientDb.collection("products").updateOne({ _id: ObjectId.createFromHexString(id) }, { $set: { picture:`${urlBackend}/${picture}` }});
+
+    res.status(200).send({
+        data: result,
+        message: "Picture updated successfully"
+    });
+}
+
+const deleteProduct = async (id,res) => {
+    const product = await clientDb.collection("products").deleteOne({ _id: ObjectId.createFromHexString(id) });
+    if(!product){
+        res.status(404).send(`Product with the id ${id} not found`);
+    }
+    res.status(200).json({
+        data: product,
+        message: "Product deleted successfully"
+    })
+
+}
 export {
     newProduct,
     getProduct,
-    getProducts
+    getProducts,
+    updateProduct,
+    deleteProduct,
+    updateImage
 }
