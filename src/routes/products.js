@@ -4,7 +4,7 @@ import {upload} from "../config/staticFiles.js";
 
 const router = Router();
 
-router.get("/products",async(req,res) => {
+router.get("/v1/products",async(req,res) => {
     try{
         const products = await getProducts(res);
         return res.status(200).send(products);
@@ -13,7 +13,7 @@ router.get("/products",async(req,res) => {
         return res.status(500).json({ message: 'Internal server error' });
     }
 })
-router.get("/products/:id",async (req,res) => {
+router.get("/v1/products/:id",async (req,res) => {
     try{
         const id = req.params?.id
         if(!id){
@@ -26,18 +26,15 @@ router.get("/products/:id",async (req,res) => {
         return res.status(500).json({ message: 'Internal server error' });
     }
 })
-router.post("/products",upload.single("picture"),async (req,res) => {
+router.post("/v1/products",upload.single("picture"),async (req,res) => {
     try{
         const name= req.body?.name;
         const price= req.body?.price;
         const picture= req.file?.filename
         const pieces = req.body?.pieces
         
-        if (!name || !price || !picture || !pieces) {
-            return res.status(400).send("Missing required fields")
-        }
         const product = {name,price,picture,pieces};
-        return newProduct(product,res);
+        return await newProduct(product,res);
     }catch(err){
         console.log('Error', err);
         return res.status(500).json({ message: 'Internal server error' });
@@ -45,7 +42,7 @@ router.post("/products",upload.single("picture"),async (req,res) => {
 })
 
 
-router.put("/products/:id",async (req,res) => {
+router.put("/v1/products/:id",async (req,res) => {
     try{
         const id = req.params?.id
         const productData = {...req.body};
@@ -59,7 +56,7 @@ router.put("/products/:id",async (req,res) => {
 })
 
 
-router.patch("/products/:id",upload.single("picture"),async (req,res) => {
+router.patch("/v1/products/:id",upload.single("picture"),async (req,res) => {
 
     try{
         const id = req.params?.id;
@@ -74,7 +71,7 @@ router.patch("/products/:id",upload.single("picture"),async (req,res) => {
 })
 
 
-router.delete("/products/:id",async (req,res) => {
+router.delete("/v1/products/:id",async (req,res) => {
     try{
         const id = req.params?.id
         
