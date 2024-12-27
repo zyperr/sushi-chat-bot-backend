@@ -1,20 +1,19 @@
 import { clientDb } from "../config/db.js";
-import {hashPassword,createToken,verifyHash} from "../security/hashing.js"
+import {hashPassword,verifyHash} from "../security/hashing.js"
+import { createToken } from "../security/token.js";
 import { ObjectId } from "mongodb";
 import {userModel,userLoginModel} from "../models/usuario.js";
 import { ZodError } from "zod";
-const getUser = async (id,res) =>  {
-    const user = await clientDb.collection("users").findOne({ _id: ObjectId.createFromHexString(id)});
-    if(!user){
-        res.status(404).json({message:`User with the id ${id} not found`});
-    }
 
-    res.status(200).json(user);
-}
+
+
 const createUser = async (user,res) =>  {
     try{
         //It validates user data with userModel
         const validUser = userModel.parse(user);
+        if(!validUser){
+            return res.status(400).send("User data is invalid")
+        }
     
         const userExists = await clientDb.collection("users").findOne({name: validUser.name});
         if(userExists){
@@ -30,6 +29,9 @@ const createUser = async (user,res) =>  {
             
         const result = await clientDb.collection("users").insertOne(newUser);
 
+        if(!result){
+            return res.status(500).send("Error creating the user")
+        }
 
         res.status(201).json({
             data: result,
@@ -45,8 +47,10 @@ const createUser = async (user,res) =>  {
             }));
         return res.status(400).json({ errores });
     }
+
+    }
 }
-}
+
 
 
 const login = async (user, res) => {
@@ -85,9 +89,16 @@ const login = async (user, res) => {
         return res.status(500).json({ message: 'Internal server error' });
     }
 }
+const getMe = async (id,res) => {
+    const user = await clientDb.collection("users").findOne({ _id: ObjectId.createFromHexString(id)});
+    if(!user){
+        res.status(404).json({message:`User with the id ${id} not found`});
+    }
 
+    res.status(200).json(user);
+}
 export {
     createUser,
-    getUser,
-    login
+    login,
+    getMe
 }
