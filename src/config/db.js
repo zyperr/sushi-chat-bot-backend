@@ -1,8 +1,7 @@
 import { MongoClient } from "mongodb";
 import { envVariables } from "../config/envVariables.js";
 
-
-const {PORT_DB,DB_NAME} = envVariables
+const {PORT_DB,DB_NAME,PORT} = envVariables
 
 
 
@@ -16,11 +15,10 @@ client.connect((err) => {
     }
     console.log("Connected to MongoDB");
 })
-
-
 const clientDb = client.db(DB_NAME);
 
 export {
-    clientDb
+    clientDb,
+    client
 }
 
