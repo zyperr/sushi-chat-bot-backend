@@ -1,13 +1,8 @@
 import { Router } from "express";
-import { createUser,getUser,login } from "../services/userService.js";
-
+import { createUser,getMe,login } from "../services/userService.js";
+import { authenticateToken } from "../security/token.js";
 const router = Router();
 
-
-router.get("/v1/users/:id",async (req,res) => {
-    const id = req.params?.id;
-    return getUser(id,res);
-})
 
 router.post("/v1/users/register",async(req,res) => {
     const user = req.body;
@@ -21,10 +16,13 @@ router.post("/v1/users/login",async(req,res) => {
 })
 
 router.post("/v1/users/logout",async(req,res) => {
-    const user = req.body;
-    return createUser(user,res);
+    return res.status(200).json({message:"Logout successful"});
 })
 
 
+router.get("/v1/users/me",authenticateToken , (req,res) => {
+    const id = req.user.id
+    return getMe(id,res)
+})
 
 export default router
