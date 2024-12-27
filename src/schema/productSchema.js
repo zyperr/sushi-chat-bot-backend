@@ -23,7 +23,12 @@ clientDb.createCollection("products",{
                     description: "must be a number and is required",
                     minimun:1,
                     max:100
-                }
+                },
+                category: {
+                    bsonType: "string",
+                    description: "must be a string and is required",
+                    example:"sushi"
+                },
             }
         }
     }
