@@ -1,5 +1,5 @@
 import { clientDb } from "../config/db.js";
-const productSchema = clientDb.createCollection("products",{
+clientDb.createCollection("products",{
     validator: {
         $jsonSchema: {
             bsonType: "object",
@@ -11,15 +11,18 @@ const productSchema = clientDb.createCollection("products",{
                 },
                 price: {
                     bsonType: ["double"],
-                    description: "must be a number and is required"
+                    description: "must be a number and is required",
+                    minimun:0
                 },
                 picture: {
                     bsonType: "string",
-                    description: "must be a string and is required"
+                    description: "must be a string and is required",
                 },
                 pieces: {
                     bsonType: "number",
-                    description: "must be a number and is required"
+                    description: "must be a number and is required",
+                    minimun:1,
+                    max:100
                 }
             }
         }
