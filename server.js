@@ -3,6 +3,7 @@ import path,{ dirname } from "path";
 import { fileURLToPath } from 'url';
 import routerProducts from "./src/routes/products.js";
 import routerUser from "./src/routes/users.js";
+import routerOrder from "./src/routes/order.js";
 import { envVariables } from './src/config/envVariables.js';
 
 
@@ -18,6 +19,7 @@ app.use(json());
 app.use(express.static(path.join(__dirname, "public/images")));
 app.use(routerProducts)
 app.use(routerUser)
+app.use(routerOrder)
 
 app.get("/",(req, res) => {
     res.send("Hello this is the server for sushi chat bot")
