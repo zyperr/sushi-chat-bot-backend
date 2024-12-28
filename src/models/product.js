@@ -6,5 +6,7 @@ export const productModel = z.object({
     price: z.number().min(0).positive({message:"Price must be a positive number"}),
     picture: z.string().min(3),
     pieces: z.number().min(1).max(100),
-    category: z.string().min(3).optional()
+    category: z.string().min(3).optional().default("sushi")
 })
+
+
