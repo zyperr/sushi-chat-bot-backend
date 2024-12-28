@@ -12,6 +12,8 @@ export const userModel = zod.object({
         - Can contain special characters
     */ 
     password: zod.string().min(8).regex(/^(?=.*\d)(?=.*[a-z])(?=.*[A-Z])(?=.*[a-zA-Z]).{8,}$/,{message:"Invalid password must contain at least 1 uppercase letter, 1 lowercase letter, and 1 number and at least 8 characters and also special characters"}),
+    role:zod.string().optional().default("user"),
+    order:zod.array(zod.string()).optional().default([])
 })
 
 
