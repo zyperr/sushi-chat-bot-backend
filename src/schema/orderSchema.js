@@ -1,45 +1,46 @@
 import { clientDb } from "../config/db";
 
 clientDb.createCollection("orders",{
-    validator:{
-        $jsonSchema:{
+    
+        validator: {
+          $jsonSchema: {
             bsonType: "object",
-            required: ["products", "total","date",],
+            required: ["usuarioId", "productos", "estado", "fecha"],
             properties: {
-                products:{
-                    bsonType:"array",
-                    items:{
-                        bsonType:"object",
-                        required: ["productId", "quantity","subtotal"],
-                        properties: {
-                            productId: {
-                                bsonType:"ObjectId",
-                                description: "must be an ObjectId and is required",
-                            },
-                            quantity: {
-                                bsonType:"number",
-                                description: "must be a number and is required",
-                                minimun:1,
-                                max:100
-                            },
-                            subtotal: {
-                                bsonType:"double",
-                                description: "must be a number and is required",
-                                minimun:0
-                            }
-                        }
+                usuarioId: {
+                bsonType: "objectId",
+                
+              },
+              productos: {
+                bsonType: "array",
+                items: {
+                  bsonType: "object",
+                  required: ["productoId", "quantity", "total"],
+                  properties: {
+                    productoId: {
+                      bsonType: "objectId",
+                    },
+                    quantity: {
+                      bsonType: "int",
+                      minimum: 1,
+                    },
+                    total: {
+                      bsonType: "double",
+                     
                     }
-                },
-                total:{
-                    bsonType:"double",
-                    description: "must be a number and is required",
-                    minimun:0
-                },
-                date: {
-                    bsonType:"date",
-                    description: "must be a date and is required",
+                  }
                 }
+              },
+              state: {
+                bsonType: "string",
+                enum: ["pendiente", "entregado", "cancelado"],
+              },
+              date: {
+                bsonType: "date",
+                
+              }
             }
+          }
         }
-    }
+            
 })
