@@ -1,19 +1,24 @@
 import { Router } from "express";
 import {newProduct,getProducts,getProduct,updateProduct, deleteProduct,updateImage} from "../services/service.js";
 import {upload} from "../config/staticFiles.js";
+import {authenticateToken} from "../security/token.js";
+import { verifyRole } from "../security/verifyRole.js";
+import {getUser} from "../services/userService.js";
 
 const router = Router();
+const endpoint = "/v1/products"
 
-router.get("/v1/products",async(req,res) => {
+
+router.get(endpoint,async(req,res) => {
     try{
         const products = await getProducts(res);
-        return res.status(200).send(products);
+        return res.status(200).json(products);
     }catch(err){
         console.log('Error', err);
         return res.status(500).json({ message: 'Internal server error' });
     }
 })
-router.get("/v1/products/:id",async (req,res) => {
+router.get(`${endpoint}/:id`,async (req,res) => {
     try{
         const id = req.params?.id
         if(!id){
@@ -26,7 +31,7 @@ router.get("/v1/products/:id",async (req,res) => {
         return res.status(500).json({ message: 'Internal server error' });
     }
 })
-router.post("/v1/products",upload.single("picture"),async (req,res) => {
+router.post(`${endpoint}/admin`,upload.single("picture"),async (req,res) => {
     try{
         const name= req.body?.name;
         const price= req.body?.price;
@@ -42,25 +47,37 @@ router.post("/v1/products",upload.single("picture"),async (req,res) => {
 })
 
 
-router.put("/v1/products/:id",async (req,res) => {
+router.put(`${endpoint}/admin/:id`,authenticateToken,async (req,res) => {
     try{
         const id = req.params?.id
         const productData = {...req.body};
+
         
-        return await updateProduct(id,productData,res);
+        const {role} = await getUser(req.user?.id);
+        const {access} = await verifyRole(role,res);
+        if(!access){
+            return res.status(403).json({message:"Access denied"});
+        }
+        return await updateProduct(id,productData,res,req.user);
     }catch(err){
-        console.log('Error', err);
+        console.error('Error', err);
         return res.status(500).json({ message: 'Internal server error' });
     }
-
 })
 
 
-router.patch("/v1/products/:id",upload.single("picture"),async (req,res) => {
+router.patch(`${endpoint}/admin/:id`,upload.single("picture"),authenticateToken,async (req,res) => {
 
     try{
         const id = req.params?.id;
         const picture = req.file?.filename;
+
+        const {role} = await getUser(req.user?.id);
+        const {access} = await verifyRole(role,res);
+
+        if(!access){
+            return res.status(403).json({message:"Access denied"});
+        }
 
         return await updateImage(id,res,picture);
 
@@ -71,10 +88,15 @@ router.patch("/v1/products/:id",upload.single("picture"),async (req,res) => {
 })
 
 
-router.delete("/v1/products/:id",async (req,res) => {
+router.delete(`${endpoint}/admin/:id`,authenticateToken,async (req,res) => {
     try{
         const id = req.params?.id
-        
+        const {role} = await getUser(req.user?.id);
+        const {access} = await verifyRole(role,res);
+
+        if(!access){
+            return res.status(403).json({message:"Access denied"});
+        }
         return await deleteProduct(id,res);
     }catch(err){
         console.log('Error', err);
