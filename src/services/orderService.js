@@ -5,8 +5,9 @@ import { clientDb } from "../config/db.js"
 import { ObjectId } from "mongodb"
 const createOrder = async (order, res) => {
     try {
-        const { userId, products,state,date } = orderModel.parse(order);
-
+        
+        const { userId, products,date,state } = orderModel.parse(order);
+        
         if (!userId || !Array.isArray(products) || products.length === 0) {
             return res.status(400).json({ message: "Data's not valid" });
         }
