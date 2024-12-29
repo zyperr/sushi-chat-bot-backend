@@ -26,6 +26,7 @@ clientDb.createCollection("users",{
                 },
                 role:{
                     bsonType:"string",
+                    enum:["admin","user"],
                     description:"must be a string and is required",
                     example:"admin"
                 }
