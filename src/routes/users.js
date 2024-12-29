@@ -27,7 +27,6 @@ router.get(`${endpoint}/me`,authenticateToken , (req,res) => {
 router.get(`${endpoint}/:id/order`,authenticateToken , (req,res) => {
     const id = req.params.id
     const querys = req.query
-    console.log(querys)
     return getOrderUser(id,res,querys)
 })
 
