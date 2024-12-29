@@ -1,6 +1,6 @@
 import z from "zod";
 
-const state = z.enum(["pending", "completed", "cancelled"]);
+
 
 export const orderModel = z.object({
     products: z.array(z.object(
@@ -13,5 +13,5 @@ export const orderModel = z.object({
     total: z.number().min(0).default(0).optional(),
     date: z.string().optional().default(new Date().toISOString().slice(0, 10)),
     userId: z.string(),
-    state: state.default("pending").optional()
+    state: z.string().default("pendiente")
 })
