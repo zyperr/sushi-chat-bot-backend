@@ -5,11 +5,10 @@ clientDb.createCollection("orders",{
         validator: {
           $jsonSchema: {
             bsonType: "object",
-            required: ["usuarioId", "productos", "estado", "fecha"],
+            required: ["userId", "products", "state", "date"],
             properties: {
-                usuarioId: {
+              userId: {
                 bsonType: "objectId",
-                
               },
               productos: {
                 bsonType: "array",
@@ -37,10 +36,15 @@ clientDb.createCollection("orders",{
               },
               date: {
                 bsonType: "date",
-                
+                required:false
               }
             }
           }
         }
             
-})
+}).then(() => {
+    console.log("Collection orders created successfully");
+  })
+  .catch((error) => {
+    console.error("Error creating collection orders:", error);
+  });
