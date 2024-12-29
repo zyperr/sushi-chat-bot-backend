@@ -3,14 +3,32 @@ import { ObjectId } from "mongodb";
 import {productModel} from "../models/product.js";
 import { ZodError } from "zod";
 import { envVariables } from "../config/envVariables.js";
-
 const {PORT} = envVariables
 const urlBackend = `http://localhost:${PORT}`
 
-const getProducts = async (res) => {
+const getProducts = async (res,query) => {
     try{
-        const products = await clientDb.collection("products").find().toArray();
-        return products;
+        
+        const sortDict = {};
+        if(query.orderBy){
+            if(query.orderBy === "asc") sortDict.price = 1;
+            if(query.orderBy === "desc") sortDict.price = -1;
+        }
+        
+        const limitResults = parseInt(query.limit) || 10;
+        const skipResults = (parseInt(query.page) - 1) * limitResults;
+        const total = await clientDb.collection("products").countDocuments();
+
+        const products = await clientDb.collection("products").find().sort(sortDict).skip(skipResults).limit(limitResults).toArray();
+        return {
+            data: products,
+            page: parseInt(query.page) || 1,
+            limit: limitResults,
+            totalPages: Math.ceil(total / limitResults),
+            total
+        };
+
+
     }catch(err){
         console.log('Error', err);
         return res.status(500).json({ message: 'Internal server error' });
