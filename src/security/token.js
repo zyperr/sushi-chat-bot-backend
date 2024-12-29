@@ -17,9 +17,6 @@ const createToken = (id) => {
 }
 const authenticateToken = (req,res,next) => {
     const token = req.headers["authorization"]?.split(" ")[1];
-    console.log(token)
-    console.log(req.headers)
-    console.log(res.body)
     if (!token) {
         return res.status(403).json({ message: 'Access denied, token was not provided' });
     }
