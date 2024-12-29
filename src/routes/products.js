@@ -8,10 +8,9 @@ import {getUser} from "../services/userService.js";
 const router = Router();
 const endpoint = "/v1/products"
 
-
 router.get(endpoint,async(req,res) => {
     try{
-        const products = await getProducts(res);
+        const products = await getProducts(res,req.query);
         return res.status(200).json(products);
     }catch(err){
         console.log('Error', err);
