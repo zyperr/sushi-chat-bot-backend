@@ -2,7 +2,7 @@ import z from "zod";
 
 
 
-export const orderModel = z.object({
+const orderModel = z.object({
     products: z.array(z.object(
         {
             productId:z.string(),
@@ -15,3 +15,7 @@ export const orderModel = z.object({
     userId: z.string(),
     state: z.string().default("pendiente")
 })
+
+export {
+    orderModel,
+}
