@@ -5,17 +5,17 @@ import { ObjectId } from "mongodb";
 import {userModel,userLoginModel} from "../models/users.js";
 import { ZodError } from "zod";
 import { handleQuerys } from "../schema/filtro.js";
-const createUser = async (user,res) =>  {
+const createUser = async (user) =>  {
     try{
         //It validates user data with userModel
         const validUser = userModel.parse(user);
         if(!validUser){
-            return res.status(400).send("User data is invalid")
+            throw new Error("Invalid user data")
         }
     
         const userExists = await clientDb.collection("users").findOne({name: validUser.name});
         if(userExists){
-            return res.status(400).send("User already exists")
+           throw new Error("User already exists")
         }
 
         let newUser = {
@@ -26,13 +26,13 @@ const createUser = async (user,res) =>  {
         const result = await clientDb.collection("users").insertOne(newUser);
 
         if(!result){
-            return res.status(500).send("Error creating the user")
+            throw new Error("Error creating user")
         }
-        
-        res.status(201).json({
-            data: result,
-            message: "User created successfully"    
-        });
+
+        return {
+            message:"User created successfully",
+            user:newUser
+        }
         
     }catch(err){
         if (err instanceof ZodError) {
@@ -41,7 +41,7 @@ const createUser = async (user,res) =>  {
               campo: err.path.join('.'),
               mensaje: err.message,
             }));
-        return res.status(400).json({ errores });
+        throw new Error(errores);
     }
 
     }
@@ -49,47 +49,46 @@ const createUser = async (user,res) =>  {
 
 
 
-const login = async (user, res) => {
+const login = async (user) => {
     try {
         const validUser = userLoginModel.parse(user);
         const userExists = await clientDb.collection("users").findOne({ name: validUser.name });
 
         if (!userExists) {
-            return res.status(404).send("User not found");
-
+           throw new Error("User not found");
         }
 
         const passwordMatch = await verifyHash(validUser.password, userExists.password);
 
         if (!passwordMatch) {
-            return res.status(401).send("Invalid password");
+            throw new Error("Invalid password");
         }
 
         const token = createToken(userExists._id);
 
         if (!token) {
-            return res.status(500).json({ message: 'Token generation failed' });
+           throw new Error("Error creating token");
         }
 
-        return res.json({ message: 'Login successful', token });
+        return {
+            message: "Login successful",
+            token
+        }
     } catch (err) {
         if (err instanceof ZodError) {
             const errores = err.errors.map(error => ({
                 campo: error.path.join('.'),
                 mensaje: error.message,
             }));
-            return res.status(400).json({ errores });
+            throw new Error(errores);
         }
         
         console.error('Unexpected error occurred:', err);
-        return res.status(500).json({ message: 'Internal server error' });
+        throw new Error("Database query failed");
     }
 }
 const getMe = async (id,res) => {
     const user = await clientDb.collection("users").findOne({ _id: ObjectId.createFromHexString(id)});
-    if(!user){
-        res.status(404).json({message:`User with the id ${id} not found`});
-    }
    const {name,email,order,role,_id} = user
     const parsedUser ={
         _id,
@@ -108,19 +107,19 @@ const getUser = async (id) => {
         role:user.role
     }
 }
-const updateUserOrder = async (id,orderId,res) => {
+const updateUserOrder = async (id,orderId) => {
     await clientDb.collection("users").updateOne({ _id: ObjectId.createFromHexString(id) }, { $push: { order: orderId } });
 }
 
-const getOrderUser = async (id, res, querys) => {
+const getOrderUser = async (id, querys) => {
     try {
         if (!id) {
-            return res.status(400).json({ message: 'User ID is required' });
+            throw new Error("Missing required fields (id)");
         }
 
         const user = await clientDb.collection("users").findOne({ _id: ObjectId.createFromHexString(id) });
         if (!user) {
-            return res.status(404).json({ message: `User with the id ${id} not found` });
+            throw new Error(`User with ID ${id} not found`);
         }
 
         const { filterDict } = handleQuerys(querys);
@@ -133,10 +132,13 @@ const getOrderUser = async (id, res, querys) => {
           }).limit(10).toArray();
 
         if (!orders || orders.length === 0) {
-            return res.status(200).json({ message: "User has not placed any orders yet", orders: [] });
+            return {
+                message: "User has not placed any orders yet",
+                orders: []
+            }
         }
 
-        return res.status(200).json({ orders });
+        return orders
     } catch (err) {
         console.error('Error fetching orders:', err);
         if (err instanceof ZodError) {
@@ -144,9 +146,9 @@ const getOrderUser = async (id, res, querys) => {
                 campo: error.path.join('.'),
                 mensaje: error.message,
             }));
-            return res.status(400).json({ errors });
+            throw new Error(errors);
         }
-        return res.status(500).json({ message: 'Internal server error' });
+        throw new Error("Database query failed");
     }
 }
 
