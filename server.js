@@ -5,7 +5,7 @@ import routerProducts from "./src/routes/products.js";
 import routerUser from "./src/routes/users.js";
 import routerOrder from "./src/routes/order.js";
 import { envVariables } from './src/config/envVariables.js';
-
+import routerBot from "./src/routes/bot.js";
 
 
 const app = express();
@@ -20,6 +20,7 @@ app.use(express.static(path.join(__dirname, "public/images")));
 app.use(routerProducts)
 app.use(routerUser)
 app.use(routerOrder)
+app.use(routerBot)
 
 app.get("/",(req, res) => {
     res.send("Hello this is the server for sushi chat bot")
