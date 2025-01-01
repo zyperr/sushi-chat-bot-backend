@@ -6,51 +6,66 @@ import { envVariables } from "../config/envVariables.js";
 const {PORT} = envVariables
 const urlBackend = `http://localhost:${PORT}`
 
-const getProducts = async (res,query) => {
-    try{
-        
-        const sortDict = {};
-        if(query.orderBy){
-            if(query.orderBy === "asc") sortDict.price = 1;
-            if(query.orderBy === "desc") sortDict.price = -1;
-        }
-        
-        const limitResults = parseInt(query.limit) || 10;
-        const skipResults = (parseInt(query.page) - 1) * limitResults;
-        const total = await clientDb.collection("products").countDocuments();
+const getProducts = async (page, limitResults) => {
+    try {
 
-        const products = await clientDb.collection("products").find().sort(sortDict).skip(skipResults).limit(limitResults).toArray();
+        const skipResults = (page - 1) * limitResults;
+        const total = await clientDb.collection("products").countDocuments();
+        
+        if (total === 0) {
+            return {
+                data: [],
+                page,
+                limit: limitResults,
+                totalPages: 0,
+                total
+            };
+        }
+
+        const products = await clientDb.collection("products").find().skip(skipResults).limit(limitResults).toArray();
+
         return {
-            data: products,
-            page: parseInt(query.page) || 1,
+            data: products || [],
+            page,
             limit: limitResults,
             totalPages: Math.ceil(total / limitResults),
             total
         };
-
-
-    }catch(err){
-        console.log('Error', err);
-        return res.status(500).json({ message: 'Internal server error' });
+    } catch (err) {
+        console.error('Error fetching products:', err);
+        throw new Error("Database query failed");
     }
 }
 
-const getProduct = async (id,res) => {
+const getProduct = async (id) => {
     try{
         const product = await clientDb.collection("products").findOne({ _id: ObjectId.createFromHexString(id)});
         if(!product){
-            res.status(404).json({message:`Product with the id ${id} not found`});
+            return {
+                data: null,
+                message: `Product of id: ${id} not found`
+            }
         }
 
-        return res.status(200).json(product);
+        return product;
     }catch(err){
         console.log('Error', err);
-        return res.status(500).json({ message: 'Internal server error' });
+        throw new Error("Database query failed");
     }
 
 } 
 
-const newProduct = async (product,res) => {
+const getByName = async (productName) => {
+    try{
+        const product = await clientDb.collection("products").findOne({name:productName});
+        return product;
+    }catch(err){
+        console.error("Error", err);
+        throw new Error("Database query failed");
+    }
+}
+
+const newProduct = async (product) => {
     try {
         const formatedProduct = {
             ...product,
@@ -60,10 +75,16 @@ const newProduct = async (product,res) => {
         }
         const validProduct = productModel.parse(formatedProduct);
         const result = await clientDb.collection("products").insertOne(validProduct);
-        return res.status(201).json({
+        if(!result){
+            return {
+                data: null,
+                message: "Error creating product"
+            }
+        }
+        return {
             data: result,
             message: "Product created successfully"
-        });
+        }
     } catch (err) {
         if (err instanceof ZodError) {
             // Extraer y estructurar los errores
@@ -71,60 +92,78 @@ const newProduct = async (product,res) => {
                 campo: err.path.join('.'),
                 mensaje: err.message,
             }));
-            return res.status(400).json({ errores });
+            return {
+                data: null,
+                message: "Error creating product",
+                errors: errores
+            }
         }
         console.error(err);
-        return res.status(500).json({ message: 'Internal server error' });
+        throw new Error("Database query failed");
     }
 }
 
-const updateProduct = async (id,parameters,res) => {
+const updateProduct = async (id,parameters) => {
     try{
         const product = await clientDb.collection("products").findOne({ _id: ObjectId.createFromHexString(id)});
         if(!product){
-            res.status(404).json({message:`Product with the id ${id} not found`});
+           return {
+               data: null,
+               message: `Product with the id ${id} not found`
+           }
         }
 
         
         const result = await clientDb.collection("products").updateOne({ _id: ObjectId.createFromHexString(id) }, { $set: parameters });
 
-        res.status(200).json({
-            data: result,
-            message: "Product updated successfully"
-        });
+      return{
+        data: result,
+        message: "Product updated successfully"
+      }
         
     }catch(err){
         console.log('Error', err);
-        return res.status(500).json({ message: 'Internal server error' });
+        throw new Error("Database query failed");
     }
 }
 
-const updateImage = async (id,res,picture) => {
+const updateImage = async (id,picture) => {
     if(!picture){
-        res.status(400).json({message:"Missing required fields (picture)"})
+        return {
+            data: null,
+            message: "No picture found"
+        }
     }
     const product = await clientDb.collection("products").findOne({ _id: ObjectId.createFromHexString(id)});
     if(!product){
-        res.status(404).json({message:`Product with the id ${id} not found`});
+        return {
+            data: null,
+            message: `Product of id: ${id} not found`
+        }
     }
 
     const result = await clientDb.collection("products").updateOne({ _id: ObjectId.createFromHexString(id) }, { $set: { picture:`${urlBackend}/${picture}` }});
 
-    res.status(200).json({
+
+    return {
         data: result,
         message: "Picture updated successfully"
-    });
+    }
 }
 
-const deleteProduct = async (id,res) => {
+const deleteProduct = async (id) => {
     const product = await clientDb.collection("products").deleteOne({ _id: ObjectId.createFromHexString(id) });
     if(!product){
-        res.status(404).json({message:`Product with the id ${id} not found`});
+       return{
+        data: null,
+        message: `Product of id: ${id} not found`
+       }
     }
-    res.status(200).json({
+
+    return {
         data: product,
         message: "Product deleted successfully"
-    })
+    }
 
 }
 export {
@@ -133,5 +172,6 @@ export {
     getProducts,
     updateProduct,
     deleteProduct,
-    updateImage
+    updateImage,
+    getByName
 }
