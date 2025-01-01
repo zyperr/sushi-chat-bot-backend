@@ -1,0 +1,34 @@
+{
+    "hello": {
+        "words": ["hola", "buenos dias", "buenas tardes", "buenas noches"],
+        "message":"Hola buenas \n1 Estas son las opciones disponibles: \n2 Menu \n3 Hacer un pedido \n5 Horarios \nDonde se encuentran?"
+    },
+    "menu": {
+        "words":["menú", "quiero ver el menú", "mostrar el menú","cual es el menú","menu","quiero ver el menu","mostrar el menu","cual es el menu"],
+        "message":"Claro aqui tienes los productos disponibles"
+    },
+    "order": {
+        "words": ["quiero hacer un pedido", "hacer un pedido", "pedido"],
+        "message": "Por favor, escribe tu pedido en el siguiente formato: agregar <producto> <cantidad>"
+    },
+    "create_order": {
+        "words":["agregar","añadir","quiero agregar"],
+        "message":"Tu pedido a sido creado con exito"
+    },
+    "confirm_order": {
+        "words": ["confirmar mi orden", "confirmar orden", "confirmar"],
+        "message": "Tu pedido ha sido confirmado con éxito."
+    },
+    "open_hours": {
+        "words":["¿están abiertos?", "horarios", "¿a qué hora abren?","a que hora abren","estan abiertos","estan abiertos?","a que hora abren?"],
+        "message":"Estamos abiertos todos los dias de 10:00 a 22:00"
+    },
+    "where":{
+        "words":["donde estan","donde se encuentran","donde esta el local","donde esta el restaurante"],
+        "message":"Estamos ubicados en el centro de la ciudad en la calle 123"
+    },
+    "thank_you": {
+        "words":["gracias", "muchas gracias", "muy amable"],
+        "message":"Gracias por visitarnos"
+    }
+}
