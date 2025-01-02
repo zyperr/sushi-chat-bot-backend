@@ -1,8 +1,8 @@
 import { getByName, getProducts } from "./service.js";
 import { createOrder } from "./orderService.js";
 import {readFile} from "fs/promises"
-
-
+import { deleteOrderFromUser } from "./userService.js";
+import { ObjectId } from "mongodb";
 const file = await readFile("./src/config/intents.json","utf-8")
 const intents = JSON.parse(file)
 
@@ -52,16 +52,29 @@ const handleBotMessage = async (userId,userMessage,page,limit) => {
                         
                         const order = await createOrder(newOrder);
                         console.log(order);
-                        if(order.acknowledged){
+
+                        if(!order.acknowledged){
                             return {
-                                botResponse,
-                                bot
-                            };
+                                message: "Algo salio mal creando tu pedido",
+                            }
+                        }
+
+                        return {
+                            message: [botResponse,bot]
                         }
                     } catch (error) {
                         console.error("Error creating order:", error);
                         return { botResponse: "Lo siento no entendí  tu mensaje." };
                     }
+                }
+                case "delete_order": {
+                    return { botResponse };
+                }
+                case "confirm_delete": {
+                    const [_,orderId] = userMessage.split(" ");
+                    const {botResponse} = await handleDeleteOrder(userId,orderId);
+
+                    return { botResponse };
                 }
                 case "open_hours":
                     return { botResponse };
@@ -99,6 +112,25 @@ const handleOrder = async (message) => {
             quantity:parseInt(quantity)
         }
     };
+}
+
+const handleDeleteOrder = async (id,orderId) => {
+    const valid = ObjectId.isValid(orderId)
+    if(!valid){
+        return {
+            botResponse: "El id de tu pedido no es valido"
+        }
+    }
+    const response = await deleteOrderFromUser(id,orderId)
+
+    if(!response.result.deletedCount){
+        return {
+            botResponse: "Algo salio mal eliminando tu pedido"
+        }
+    }
+    return {
+        botResponse: "Se ha eliminado tu pedido con exito",
+    }
 }
 
 
