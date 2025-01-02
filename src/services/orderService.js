@@ -1,21 +1,26 @@
-import {orderModel} from "../models/order.js"
 import {updateUserOrder} from "./userService.js"
-import { ZodError } from "zod"
 import { clientDb } from "../config/db.js"
 import { ObjectId } from "mongodb"
 const createOrder = async (order) => {
-    try {
-        
-        const { userId, products,date,state } = orderModel.parse(order);
+ 
+        const { userId, products,date,state } = order;
         
         if (!userId || !Array.isArray(products) || products.length === 0) {
-            throw new Error("Missing required fields");
+
+            return {
+                message:"Missing required fields",
+                order:[]
+            }
         }
 
         const user = await clientDb.collection("users").findOne({ _id: ObjectId.createFromHexString(userId) });
         
         if (!user) {
-            throw new Error(`User with ID ${userId} not found`);
+
+            return {
+                message:`User with ID : ${userId} not found`,
+                order:[]
+            }
         }
 
         const detailProducts = await Promise.all(
@@ -33,7 +38,10 @@ const createOrder = async (order) => {
         );
 
         if (!detailProducts || detailProducts.length === 0) {
-            throw new Error("Products not found");
+            return {
+                message:"Products not found",
+                order:[]
+            }
         }
 
         const total = detailProducts.reduce((sum, item) => sum + item.subtotal, 0);
@@ -49,22 +57,14 @@ const createOrder = async (order) => {
         const result = await clientDb.collection("orders").insertOne(newOrder);
 
         if (!result?.insertedId) {
-            throw new Error("Error creating the order");
+            return {
+                message:"Error creating the order",
+                order:[]
+            }
         }
 
         await updateUserOrder(userId, result.insertedId);
         return result
-    } catch (err) {
-        if (err instanceof ZodError) {
-            const errores = err.errors.map(error => ({
-                campo: error.path.join('.'),
-                mensaje: error.message,
-            }));
-            throw new Error(errores); 
-        } else if (err instanceof Error) {
-            throw new Error(err.message);
-        }
-    }
 }
 
 
