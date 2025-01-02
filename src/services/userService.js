@@ -2,90 +2,77 @@ import { clientDb } from "../config/db.js";
 import {hashPassword,verifyHash} from "../security/hashing.js"
 import { createToken } from "../security/token.js";
 import { ObjectId } from "mongodb";
-import {userModel,userLoginModel} from "../models/users.js";
+import {userLoginModel} from "../models/users.js";
 import { ZodError } from "zod";
 import { handleQuerys } from "../schema/filtro.js";
 const createUser = async (user) =>  {
-    try{
-        //It validates user data with userModel
-        const validUser = userModel.parse(user);
-        if(!validUser){
-            throw new Error("Invalid user data")
-        }
     
-        const userExists = await clientDb.collection("users").findOne({name: validUser.name});
+        const userExists = await clientDb.collection("users").findOne({name: user.name});
         if(userExists){
-           throw new Error("User already exists")
+           
+           return {
+             message:"User already exists",
+             user:[]
+           }
         }
 
         let newUser = {
-            ...validUser,
-            password: await hashPassword(validUser.password)
+            ...user,
+            password: await hashPassword(user.password)
         }
             
         const result = await clientDb.collection("users").insertOne(newUser);
 
         if(!result){
-            throw new Error("Error creating user")
+            return {
+                message:"Error creating user",
+                 user:[]
+            }
         }
 
         return {
             message:"User created successfully",
             user:newUser
         }
-        
-    }catch(err){
-        if (err instanceof ZodError) {
-            // Extraer y estructurar los errores
-            const errores = err.errors.map(err => ({
-              campo: err.path.join('.'),
-              mensaje: err.message,
-            }));
-        throw new Error(errores);
     }
-
-    }
-}
 
 
 
 const login = async (user) => {
-    try {
-        const validUser = userLoginModel.parse(user);
-        const userExists = await clientDb.collection("users").findOne({ name: validUser.name });
 
+        const userExists = await clientDb.collection("users").findOne({ name: user.name });
+        console.log(userExists)
         if (!userExists) {
-           throw new Error("User not found");
+           return {
+                message:"User not found",
+                user:[]
+           }
         }
 
-        const passwordMatch = await verifyHash(validUser.password, userExists.password);
+        const passwordMatch = await verifyHash(user.password, userExists.password);
 
         if (!passwordMatch) {
-            throw new Error("Invalid password");
+            return {
+                message:"Invalid password",
+                user:[]
+            }
         }
 
         const token = createToken(userExists._id);
 
         if (!token) {
-           throw new Error("Error creating token");
+           return {
+            message:"Error creating token",
+            user:[]
+           }
         }
-
+        console.log(token)
         return {
             message: "Login successful",
-            token
+            token,
+            user:userExists._id
         }
-    } catch (err) {
-        if (err instanceof ZodError) {
-            const errores = err.errors.map(error => ({
-                campo: error.path.join('.'),
-                mensaje: error.message,
-            }));
-            throw new Error(errores);
-        }
-        
-        console.error('Unexpected error occurred:', err);
-        throw new Error("Database query failed");
-    }
+    
 }
 const getMe = async (id,res) => {
     const user = await clientDb.collection("users").findOne({ _id: ObjectId.createFromHexString(id)});
@@ -112,14 +99,21 @@ const updateUserOrder = async (id,orderId) => {
 }
 
 const getOrderUser = async (id, querys) => {
-    try {
+
         if (!id) {
-            throw new Error("Missing required fields (id)");
+            return {
+                message: "Missing required fields (id)",
+                orders: []
+            }
         }
 
         const user = await clientDb.collection("users").findOne({ _id: ObjectId.createFromHexString(id) });
+        
         if (!user) {
-            throw new Error(`User with ID ${id} not found`);
+            return {
+                message: `User with ID ${id} not found`,
+                orders: []
+            }
         }
 
         const { filterDict } = handleQuerys(querys);
@@ -138,27 +132,37 @@ const getOrderUser = async (id, querys) => {
             }
         }
 
-        return orders
-    } catch (err) {
-        console.error('Error fetching orders:', err);
-        if (err instanceof ZodError) {
-            const errors = err.errors.map(error => ({
-                campo: error.path.join('.'),
-                mensaje: error.message,
-            }));
-            throw new Error(errors);
+        return {
+            message: "Orders fetched successfully",
+            orders
         }
-        throw new Error("Database query failed");
-    }
 }
 
-const deleteOrderFromUser = async (id,orderId,res) => {
-    if(!orderId){
-        res.status(400).json({message:"Missing required fields (orderId)"});
+const deleteOrderFromUser = async (id,orderId) => {
+    const updatedUser = await clientDb.collection("users").updateOne({ _id: ObjectId.createFromHexString(id) }, { $pull: { order: ObjectId.createFromHexString(orderId) } });
+    const result = await clientDb.collection("orders").deleteOne({ _id: ObjectId.createFromHexString(orderId) });
+    if(!result){
+        return {
+            message: "Order with id not found",
+            result
+        }
     }
-    await clientDb.collection("users").updateOne({ _id: ObjectId.createFromHexString(id) }, { $pull: { order: ObjectId.createFromHexString(orderId) } });
-    await clientDb.collection("orders").deleteOne({ _id: ObjectId.createFromHexString(orderId) });
-    res.status(200).json({message:"Order deleted successfully"})
+    if(!updatedUser ){
+        return {
+            message: "User with id not found",
+            result
+        }
+    }
+    if (updatedUser.modifiedCount === 0 || result.deletedCount === 0) {
+        return {
+            message: "Error deleting order from user",
+            result:result
+        }
+    }
+    return {
+        message: "Order deleted successfully",
+        result:result
+    }
 }
 
 export {
