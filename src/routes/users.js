@@ -11,10 +11,6 @@ router.post(`${endpoint}/register`,async(req,res) => {
         const user = req.body;
         const validUser = userModel.parse(user);
         
-        if(!validUser){
-            return res.status(400).json({message:"Missing required fields"});
-        }
-        
         const response = await createUser(validUser);
         if(!response.user){
             return res.status(400).json({message:response.message});
@@ -34,13 +30,11 @@ router.post(`${endpoint}/login`,async(req,res) => {
         const user = req.body;
         const validUserLogin = userLoginModel.parse(user);
 
-        if(!validUserLogin){
-            return res.status(400).json({message:"Missing required fields"});
-        }
+
         const response = await login(validUserLogin);
 
         if(!response.user){
-            return res.status(400).json({message:response.message});
+            return res.status(response.status).json({message:response.message});
         }
 
         console.log(response)
@@ -71,13 +65,11 @@ router.get(`${endpoint}/getOrders`,authenticateToken , async (req,res) => {
     try{
         const id = req.user.id
         const querys = req.query
+        const limit = parseInt(querys.limit) || 10;
         if(!id){
-            return res.status(400).json({message:"Missing required fields"});
+            return res.status(403).json({message:"User not authenticated"});
         }
-        if(!querys){
-            return res.status(400).json({message:"Missing required fields"});
-        }
-        const response = await getOrderUser(id,querys)
+        const response = await getOrderUser(id,querys,limit)
     
         if(!response.orders){
             return res.status(404).json({message:response.message});
@@ -94,17 +86,15 @@ router.delete(`${endpoint}/me/removeOrder/:orderId`,authenticateToken , async (r
     const id = req.user.id
     const orderId = req.params.orderId
 
-    if(!id){
-        return res.status(400).json({message:"User not authenticated"});
-    }
+
     if(!orderId){
         return res.status(400).json({message:"Missing required fields (orderId)"});
     }
 
     const response =  await deleteOrderFromUser(id,orderId)
     
-    if(!response.result.acknowledged){
-        return res.status(400).json({message:response.message});
+    if(!response.data){
+        return res.status(response.status).json({message:response.message});
     }
 
 
