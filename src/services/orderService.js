@@ -9,7 +9,8 @@ const createOrder = async (order) => {
 
             return {
                 message:"Missing required fields",
-                order:[]
+                order:[],
+                status:400
             }
         }
 
@@ -19,7 +20,8 @@ const createOrder = async (order) => {
 
             return {
                 message:`User with ID : ${userId} not found`,
-                order:[]
+                order:[],
+                status:404
             }
         }
 
@@ -27,7 +29,11 @@ const createOrder = async (order) => {
             products.map(async (item) => {
                 const product = await clientDb.collection("products").findOne({ _id: ObjectId.createFromHexString(item.productId) });
                 if (!product) {
-                    throw new Error(`Product with ID ${item.productId} not found`);
+                    return {
+                        message:`Product with ID : ${item.productId} not found`,
+                        order :[],
+                        status:404
+                    }
                 }
                 return {
                     productId: item.productId,
@@ -36,11 +42,19 @@ const createOrder = async (order) => {
                 };
             })
         );
-
+        console.log(detailProducts)
+        if(detailProducts[0].status === 404){
+            return {
+                message:detailProducts[0].message,
+                order:[],
+                status:404
+            }
+        }
         if (!detailProducts || detailProducts.length === 0) {
             return {
-                message:"Products not found",
-                order:[]
+                message:"user has not ordered yet",
+                order:[],
+                status:200
             }
         }
 
@@ -59,7 +73,8 @@ const createOrder = async (order) => {
         if (!result?.insertedId) {
             return {
                 message:"Error creating the order",
-                order:[]
+                order:[],
+                status:500
             }
         }
 
