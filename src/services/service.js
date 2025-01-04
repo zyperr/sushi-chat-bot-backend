@@ -88,14 +88,10 @@ const newProduct = async (product) => {
     } catch (err) {
         if (err instanceof ZodError) {
             // Extraer y estructurar los errores
-            const errores = err.errors.map(err => ({
-                campo: err.path.join('.'),
-                mensaje: err.message,
-            }));
+            const erro = err.issues[0].message;
             return {
                 data: null,
-                message: "Error creating product",
-                errors: errores
+                message: erro,
             }
         }
         console.error(err);
@@ -106,10 +102,11 @@ const newProduct = async (product) => {
 const updateProduct = async (id,parameters) => {
     try{
         const product = await clientDb.collection("products").findOne({ _id: ObjectId.createFromHexString(id)});
+        
         if(!product){
            return {
                data: null,
-               message: `Product with the id ${id} not found`
+               message: `Product with the id ${id} not found`,
            }
         }
 
@@ -131,17 +128,19 @@ const updateImage = async (id,picture) => {
     if(!picture){
         return {
             data: null,
-            message: "No picture found"
+            message: "No picture found",
+            status: 400
         }
     }
     const product = await clientDb.collection("products").findOne({ _id: ObjectId.createFromHexString(id)});
     if(!product){
         return {
             data: null,
-            message: `Product of id: ${id} not found`
+            message: `Product of id: ${id} not found`,
+            status: 404
         }
     }
-
+    
     const result = await clientDb.collection("products").updateOne({ _id: ObjectId.createFromHexString(id) }, { $set: { picture:`${urlBackend}/${picture}` }});
 
 
