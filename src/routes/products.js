@@ -4,6 +4,7 @@ import {upload} from "../config/staticFiles.js";
 import {authenticateToken} from "../security/token.js";
 import { verifyRole } from "../security/verifyRole.js";
 import {getUser} from "../services/userService.js";
+import { ObjectId } from "mongodb";
 
 const router = Router();
 const endpoint = "/v1/products"
@@ -60,16 +61,18 @@ router.get(`${endpoint}/name/:name`,async (req,res) => {
 router.post(`${endpoint}/admin`,authenticateToken,upload.single("picture"),async (req,res) => {
     try{
         const name= req.body?.name;
-        const price= req.body?.price;
+        const price= parseFloat(req.body?.price);
         const picture= req.file?.filename
-        const pieces = req.body?.pieces
+        const pieces = parseInt(req.body?.pieces)
         
         const {role} = await getUser(req.user?.id);
         const {access} = await verifyRole(role,res);
+
         if(!access){
             return res.status(403).json({message:"Access denied"});
         }
         const product = {name,price,picture,pieces};
+        
         const response = await newProduct(product);
 
         if(!response.data){
@@ -92,13 +95,17 @@ router.put(`${endpoint}/admin/:id`,authenticateToken,async (req,res) => {
         
         const {role} = await getUser(req.user?.id);
         const {access} = await verifyRole(role,res);
+
+        if(!ObjectId.isValid(id)){
+            return res.status(400).json({message:"Invalid id"});
+        }
         if(!access){
             return res.status(403).json({message:"Access denied"});
         }
         const response = await updateProduct(id,productData);
 
         if(!response.data){
-            res.status(400).json({message:response.message});
+            res.status(404).json({message:response.message});
         }
 
         return res.status(200).json(response);
@@ -117,15 +124,18 @@ router.patch(`${endpoint}/admin/:id`,upload.single("picture"),authenticateToken,
 
         const {role} = await getUser(req.user?.id);
         const {access} = await verifyRole(role,res);
-
+        
+        if(!ObjectId.isValid(id)){
+            return res.status(400).json({message:"Invalid id"});
+        }
         if(!access){
             return res.status(403).json({message:"Access denied"});
         }
 
         const response = await updateImage(id,picture);
-
+        
         if(!response.data){
-            return res.status(400).json({message:response.message});
+            return res.status(response.status).json({message:response.message});
         }
 
         return res.status(200).json(response);
@@ -143,12 +153,16 @@ router.delete(`${endpoint}/admin/:id`,authenticateToken,async (req,res) => {
         const {role} = await getUser(req.user?.id);
         const {access} = await verifyRole(role,res);
 
+        if(!ObjectId.isValid(id)){
+            return res.status(400).json({message:"Invalid id"});
+        }
         if(!access){
             return res.status(403).json({message:"Access denied"});
         }
+
         const response = await deleteProduct(id);
         if(!response.data){
-            return res.status(400).json({message:response.message});    
+            return res.status(404).json({message:response.message});    
         }
         return res.status(200).json(response);
     }catch(err){
