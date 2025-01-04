@@ -28,7 +28,7 @@
         "message":"Buenisimo podrias escribir el id de tu pedido para eliminarlo el id deberia lucir algo como esto id: 6776e418664d4b3e8afada62, Por favor escriba borrar mas el id de tu pedido"
     },
     "confirm_delete": {
-        "words":["borrar","quiero borrar"],
+        "words":["borrar"],
         "message":"El pedido se ha eliminado con exito"
     },
     "thank_you": {
