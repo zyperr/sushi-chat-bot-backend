@@ -94,6 +94,20 @@ const seedDb = async () => {
             
             
         ]
+        const user = [
+            {
+                name:"admin",
+                email:"admin@localhost",
+                password:"admin",
+                role:"admin"
+            },
+            {
+                name:"user",
+                email:"user@localhost",
+                password:"user",
+                role:"user"
+            }
+        ]
         const flag = await configCollection.findOne({ key: 'productsInitialized' });
         
         if (flag) {
@@ -101,11 +115,14 @@ const seedDb = async () => {
             return;
         }
         const products = clientDb.collection("products");
-        
+        const users = clientDb.collection("users");
+
         
         const result = await products.insertMany(shushis);
+        const resultUser = await users.insertMany(user);
         console.log(`inserted ${result.insertedCount} shushis into the collection`);
-
+        console.log(`inserted ${resultUser.insertedCount} users into the collection`);
+        
         await configCollection.insertOne({ key: 'productsInitialized', value: true })
         console.log("Database initialized");
     }catch(err){
