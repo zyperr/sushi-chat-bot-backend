@@ -2,8 +2,7 @@ import { clientDb } from "../config/db.js";
 import {hashPassword,verifyHash} from "../security/hashing.js"
 import { createToken } from "../security/token.js";
 import { ObjectId } from "mongodb";
-import {userLoginModel} from "../models/users.js";
-import { ZodError } from "zod";
+
 import { handleQuerys } from "../schema/filtro.js";
 const createUser = async (user) =>  {
     
@@ -45,7 +44,8 @@ const login = async (user) => {
         if (!userExists) {
            return {
                 message:"User not found",
-                user:[]
+                user:[],
+                status:404
            }
         }
 
@@ -53,8 +53,9 @@ const login = async (user) => {
 
         if (!passwordMatch) {
             return {
-                message:"Invalid password",
-                user:[]
+                message:"Password does not match",
+                user:[],
+                status:400
             }
         }
 
@@ -63,7 +64,8 @@ const login = async (user) => {
         if (!token) {
            return {
             message:"Error creating token",
-            user:[]
+            user:[],
+            status:500
            }
         }
         console.log(token)
@@ -98,7 +100,7 @@ const updateUserOrder = async (id,orderId) => {
     await clientDb.collection("users").updateOne({ _id: ObjectId.createFromHexString(id) }, { $push: { order: orderId } });
 }
 
-const getOrderUser = async (id, querys) => {
+const getOrderUser = async (id, querys,limit) => {
 
         if (!id) {
             return {
@@ -117,17 +119,18 @@ const getOrderUser = async (id, querys) => {
         }
 
         const { filterDict } = handleQuerys(querys);
+        
         console.log(filterDict);
         const orders = await clientDb.collection("orders").find({
             $and: [
               { _id: { $in: user.order || [] } },
               filterDict
             ]
-          }).limit(10).toArray();
-
+          }).limit(limit).toArray();
+        
         if (!orders || orders.length === 0) {
             return {
-                message: "User has not placed any orders yet",
+                message: "No orders found",
                 orders: []
             }
         }
@@ -143,25 +146,28 @@ const deleteOrderFromUser = async (id,orderId) => {
     const result = await clientDb.collection("orders").deleteOne({ _id: ObjectId.createFromHexString(orderId) });
     if(!result){
         return {
-            message: "Order with id not found",
-            result
+            message: `Order with id ${orderId} not found`,
+            data:result,
+            status:404
         }
     }
     if(!updatedUser ){
         return {
             message: "User with id not found",
-            result
+            data:result,
+            status:404
         }
     }
     if (updatedUser.modifiedCount === 0 || result.deletedCount === 0) {
         return {
             message: "Error deleting order from user",
-            result:result
+            data:result,
+            status:500
         }
     }
     return {
         message: "Order deleted successfully",
-        result:result
+        data:result
     }
 }
 
