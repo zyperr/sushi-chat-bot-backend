@@ -6,34 +6,38 @@ import { ObjectId } from "mongodb";
 import { handleQuerys } from "../schema/filtro.js";
 const createUser = async (user) =>  {
     
-        const userExists = await clientDb.collection("users").findOne({name: user.name});
-        if(userExists){
-           
-           return {
-             message:"User already exists",
-             user:[]
-           }
-        }
-
-        let newUser = {
-            ...user,
-            password: await hashPassword(user.password)
-        }
-            
-        const result = await clientDb.collection("users").insertOne(newUser);
-
-        if(!result){
-            return {
-                message:"Error creating user",
-                 user:[]
-            }
-        }
-
+    if(!user){
         return {
-            message:"User created successfully",
-            user:newUser
+            message:"Missing required fields",
+            user:[]
         }
     }
+
+    const userExists = await clientDb.collection("users").findOne({name: user.name});
+    if(userExists){
+       
+       return {
+         message:"User already exists",
+         user:[]
+       }
+    }
+
+    let newUser = {
+        ...user,
+        password: await hashPassword(user.password)
+    }
+        
+    const result = await clientDb.collection("users").insertOne(newUser);
+
+    if(!result || !result.insertedId){
+        throw new Error("Error creating user");
+    }
+
+    return {
+        message:"User created successfully",
+        user:newUser
+    }
+}
 
 
 

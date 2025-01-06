@@ -12,7 +12,7 @@ router.post(`${endpoint}/register`,async(req,res) => {
         const validUser = userModel.parse(user);
         
         const response = await createUser(validUser);
-        if(!response.user){
+        if(!response.user.length == 0){
             return res.status(400).json({message:response.message});
         }
         return res.json(response);
