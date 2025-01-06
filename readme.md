@@ -33,7 +33,7 @@ las siguientes variables de entorno en tu archivo .env
 `SECRET` -> Clave generada con  openssl rand -hex 32
 `salt_Rounds` -> Un numero entero 
 `JWT_EXPIRATION` -> Un tiempo por ej: 1hr,2hr
-
+`FRONTENT_URL` -> La url del cliente/frontend
 
 ## Como correr este proyecto
 
