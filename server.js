@@ -6,15 +6,19 @@ import routerUser from "./src/routes/users.js";
 import routerOrder from "./src/routes/order.js";
 import { envVariables } from './src/config/envVariables.js';
 import routerBot from "./src/routes/bot.js";
-
-
+import cors from "cors"
 const app = express();
 
-const {PORT} = envVariables
+const {PORT,FRONTENT_URL} = envVariables
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
 
+app.use(cors({
+    origin:FRONTENT_URL,
+    methods: ['GET', 'POST', 'PUT', 'DELETE'],
+    credentials: true
+}))
 app.use(json());
 app.use(express.static(path.join(__dirname, "public/images")));
 app.use(routerProducts)
