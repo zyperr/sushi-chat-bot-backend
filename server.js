@@ -9,13 +9,14 @@ import routerBot from "./src/routes/bot.js";
 import cors from "cors"
 const app = express();
 
-const {PORT,FRONTENT_URL} = envVariables
+const {PORT,FRONTEND_URL} = envVariables
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
+console.log(FRONTEND_URL)
 
 app.use(cors({
-    origin:FRONTENT_URL,
+    origin:[`${FRONTEND_URL}`],
     methods: ['GET', 'POST', 'PUT', 'DELETE'],
     credentials: true
 }))
