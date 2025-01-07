@@ -41,16 +41,13 @@ las siguientes variables de entorno en tu archivo .env
 
 
 ```bash
-  git clone https://link-to-project
+  git clone https://github.com/zyperr/sushi-chat-bot-backend
 ```
 
 ```bash
-  cd <nombre del proyecto>
+  cd sushi-chat-bot-backend
 ```
 
-```bash
-    cd <backend>
-```
 
 Instala las dependencias
 
