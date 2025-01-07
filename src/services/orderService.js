@@ -63,9 +63,9 @@ const createOrder = async (order) => {
         const newOrder = {
             userId: user._id,
             products: detailProducts,
-            state,
+            state:state|| "pendiente",
             total,
-            date
+            date: date || new Date().toISOString().slice(0, 10)
         };
 
         const result = await clientDb.collection("orders").insertOne(newOrder);

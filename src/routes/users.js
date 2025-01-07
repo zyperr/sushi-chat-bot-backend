@@ -12,8 +12,8 @@ router.post(`${endpoint}/register`,async(req,res) => {
         const validUser = userModel.parse(user);
         
         const response = await createUser(validUser);
-        if(!response.user.length == 0){
-            return res.status(400).json({message:response.message});
+        if(!response.user){
+            return res.status(response.status).json({message:response.message});
         }
         return res.json(response);
     }catch(err){
@@ -55,11 +55,11 @@ router.post(`${endpoint}/logout`,async(req,res) => {
 
 router.get(`${endpoint}/me`,authenticateToken , async (req,res) => {
     const id = req.user.id
-    const response = await getMe(id,res)
+    const response = await getMe(id)
     if(!response){
         return res.status(404).json({message:"User not found"});
     }
-    return res.json(response);
+    return res.status(200).json(response);
 })
 router.get(`${endpoint}/getOrders`,authenticateToken , async (req,res) => {
     try{

@@ -13,8 +13,6 @@ const {PORT,FRONTEND_URL} = envVariables
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
-console.log(FRONTEND_URL)
-
 app.use(cors({
     origin:[`${FRONTEND_URL}`],
     methods: ['GET', 'POST', 'PUT', 'DELETE'],

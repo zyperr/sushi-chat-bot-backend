@@ -76,23 +76,7 @@ const seedDb = async () => {
                 picture:`http://localhost:${PORT}/12228.webp`,
                 pieces:24,
                 category:"sushi"
-            },
-            {
-                name:"Nigiri Salmón",
-                price:2.20,
-                picture:`http://localhost:${PORT}/12208.webp`,
-                pieces:1,
-                category:"sushi"
-            },
-            {
-                name:"Signature Rock N Roll",
-                price:10.50,
-                picture:`http://localhost:${PORT}/12206.webp`,
-                pieces:8,
-                category:"sushi"
             }
-            
-            
         ]
         const user = [
             {

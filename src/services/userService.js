@@ -9,7 +9,8 @@ const createUser = async (user) =>  {
     if(!user){
         return {
             message:"Missing required fields",
-            user:[]
+            user:null,
+            status:400
         }
     }
 
@@ -18,7 +19,8 @@ const createUser = async (user) =>  {
        
        return {
          message:"User already exists",
-         user:[]
+         user:null,
+         status:400
        }
     }
 
@@ -35,7 +37,8 @@ const createUser = async (user) =>  {
 
     return {
         message:"User created successfully",
-        user:newUser
+        user:newUser,
+        status:201
     }
 }
 
@@ -47,9 +50,9 @@ const login = async (user) => {
         console.log(userExists)
         if (!userExists) {
            return {
-                message:"User not found",
-                user:[],
-                status:404
+                message:"User not exists",
+                user:null,
+                status:401
            }
         }
 
@@ -58,7 +61,7 @@ const login = async (user) => {
         if (!passwordMatch) {
             return {
                 message:"Password does not match",
-                user:[],
+                user:null,
                 status:400
             }
         }
@@ -68,7 +71,7 @@ const login = async (user) => {
         if (!token) {
            return {
             message:"Error creating token",
-            user:[],
+            user:null,
             status:500
            }
         }
@@ -80,7 +83,7 @@ const login = async (user) => {
         }
     
 }
-const getMe = async (id,res) => {
+const getMe = async (id) => {
     const user = await clientDb.collection("users").findOne({ _id: ObjectId.createFromHexString(id)});
    const {name,email,order,role,_id} = user
     const parsedUser ={
@@ -90,7 +93,7 @@ const getMe = async (id,res) => {
         order,
         role
     }
-    res.status(200).json(parsedUser);
+    return parsedUser
 }
 const getUser = async (id) => {
     const user = await clientDb.collection("users").findOne({ _id: ObjectId.createFromHexString(id)});

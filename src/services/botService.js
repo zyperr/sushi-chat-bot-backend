@@ -9,7 +9,7 @@ const intents = JSON.parse(file)
 
 const handleBotMessage = async (userId,userMessage,page,limit) => {
     if (!userMessage || typeof userMessage !== 'string') {
-        return { userMessage: "Lo siento no entendí tu mensaje." };
+        return { botResponse: "Lo siento no entendí tu mensaje." };
     }
     const formatedMessage = userMessage.toLowerCase().trim();
     for (const [intent, keywords] of Object.entries(intents)) {
@@ -29,7 +29,7 @@ const handleBotMessage = async (userId,userMessage,page,limit) => {
                         };
                     } catch (err) {
                         console.error('Error getting the menu:', err);
-                        return { message: "Lo siento no entendí  tu mensaje." };
+                        return { botResponse: "Lo siento no entendí  tu mensaje." };
                     }
                 case "order":
                     return { botResponse };
@@ -55,12 +55,12 @@ const handleBotMessage = async (userId,userMessage,page,limit) => {
 
                         if(!order.acknowledged){
                             return {
-                                message: "Algo salio mal creando tu pedido",
+                                botResponse: "Algo salio mal creando tu pedido",
                             }
                         }
 
                         return {
-                            message: [botResponse,bot]
+                            botResponse: [botResponse,bot]
                         }
                     } catch (error) {
                         console.error("Error creating order:", error);
@@ -106,7 +106,7 @@ const handleOrder = async (message) => {
     
 
     return {
-        bot: `Agregando ${productFound.name} ${quantity} al carrito\n`,
+        bot: ` Agregando ${productFound.name} ${quantity} al carrito\n`,
         a:{
             productId:productFound._id.toString(),
             quantity:parseInt(quantity)
@@ -123,7 +123,7 @@ const handleDeleteOrder = async (id,orderId) => {
     }
     const response = await deleteOrderFromUser(id,orderId)
 
-    if(!response.result.deletedCount){
+    if(!response.data){
         return {
             botResponse: "Algo salio mal eliminando tu pedido"
         }
