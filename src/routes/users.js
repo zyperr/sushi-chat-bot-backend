@@ -15,7 +15,7 @@ router.post(`${endpoint}/register`,async(req,res) => {
         if(!response.user){
             return res.status(response.status).json({message:response.message});
         }
-        return res.json(response);
+        return res.status(response.status).json(response);
     }catch(err){
         if(err instanceof ZodError){
             return res.status(400).json({message:err.issues[0].message});
