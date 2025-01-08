@@ -86,7 +86,12 @@ Una vez hecho esto ya puedes ver que se han cargado sushis y 2 usuarios para que
         }
     
 ```
-
+## Test basicos del flujo que puede seguir el usuario
+Hace test basicos del flujo principal de la aplicacion como registrarse,login y el chatbot
+### Para ejecutar los test debes de hacer lo siguiente:
+```bash
+    npm run test
+``` 
 ## API endpoints / Sushi
 
 ### GET
