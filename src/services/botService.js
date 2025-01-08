@@ -60,7 +60,8 @@ const handleBotMessage = async (userId,userMessage,page,limit) => {
                         }
 
                         return {
-                            botResponse: [botResponse,bot]
+                            botResponse: bot,
+                            productId:a.productId
                         }
                     } catch (error) {
                         console.error("Error creating order:", error);
@@ -103,10 +104,9 @@ const handleOrder = async (message) => {
     }
     const [,product,quantity] = r.exec(message);
     const productFound = await getByName(product);
-    
 
     return {
-        bot: ` Agregando ${productFound.name} ${quantity} al carrito\n`,
+        bot: ` Agregando ${productFound.name} ${quantity} al pedido\n ID: ${productFound._id}`,
         a:{
             productId:productFound._id.toString(),
             quantity:parseInt(quantity)
